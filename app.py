@@ -128,7 +128,7 @@ else:
     st.stop()
 
 # Preview
-st.write("## Your Uploaded Data")
+st.write("## Your Data Normalized with Reference Genes ")
 # Drop any group columns if present
 df_display = df_new.drop(columns=["group", "groups"], errors="ignore").copy()
 # Round floats and reindex
