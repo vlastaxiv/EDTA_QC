@@ -130,6 +130,6 @@ This project is licensed under the **MIT License**—see [LICENSE](LICENSE) for 
 
 ## ✉️ Contact
 
-For questions or support, open an issue or email `youremail@example.com`.  
+For questions or support, open an issue or email `ctrnacta@yahoo.com`.  
 
 _Last updated: 2025-05-30_
