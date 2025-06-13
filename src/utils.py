@@ -8,14 +8,17 @@ import matplotlib.colors as mcolors
 import io
 import importlib
 from functools import lru_cache
+import importlib
+from pathlib import Path
 
-# === Paths for data files ===
-# Constants for fixed data files načtený data fram se uloží do paměti (cache) a při dalším volání už se znovu nenačítá)
-DATA_DIR = os.path.join(os.path.dirname(__file__), 'data')
-TRAIN_DATA_PATH = os.path.join(DATA_DIR, 'train_data.csv')
-EXAMPLE_DATA_PATH = os.path.join(DATA_DIR, 'example_new_samples.csv')
+# === Paths for Data Files ===
+# Project root and data directory
+ROOT = Path(__file__).resolve().parent.parent
+DATA_DIR = ROOT / "data"
+TRAIN_DATA_PATH = DATA_DIR / "train_data.csv"
+EXAMPLE_DATA_PATH = DATA_DIR / "example_new_samples.csv"
 
-# === Constants for upload ===
+# === Constants for Upload ===
 REFERENCE_GENES = ["GAPDH", "GUSB", "PPIB"]
 UPLOAD_COLUMNS = [
     "sample",
@@ -31,7 +34,7 @@ UPLOAD_COLUMNS = [
     "STEAP4"]
 
 
-# === Cached data loaders ===
+# === Cached Data Loaders ===
 @lru_cache(maxsize=1)
 def get_training_data() -> pd.DataFrame:
     """
@@ -47,19 +50,13 @@ def get_example_data() -> pd.DataFrame:
     return pd.read_csv(EXAMPLE_DATA_PATH)
 
 
-# === Pipeline loader ===
-def load_pipeline(scaler_path: str, pca_path: str, model_path: str) -> object:
+# === Pipeline Loader ===
+def load_pipeline(pipeline_path: str):
     """
-    Load and return an sklearn Pipeline composed of a scaler, PCA, and model.
+    Load and return an sklearn Pipeline that already
+    contains scaler, PCA, and the SVM model (with probability=True).
     """
-    from sklearn.pipeline import Pipeline
-    scaler = joblib.load(scaler_path)
-    pca = joblib.load(pca_path)
-    model = joblib.load(model_path)
-    return Pipeline([('scaler', scaler), ('pca', pca), ('model', model)])
-
-
-import importlib
+    return joblib.load(pipeline_path)
 
 def read_and_unify(file_buffer: io.BytesIO) -> pd.DataFrame:
     """
@@ -79,7 +76,7 @@ def read_and_unify(file_buffer: io.BytesIO) -> pd.DataFrame:
         except Exception as e:
             raise ValueError(f"Cannot read Excel file: {e}")
     else:
-        # Treat as CSV
+        # Treat file as CSV
         file_buffer.seek(0)
         try:
             df = pd.read_csv(file_buffer, sep=None, engine="python")
@@ -88,7 +85,8 @@ def read_and_unify(file_buffer: io.BytesIO) -> pd.DataFrame:
 
     # Normalize decimals and convert numeric columns
     df = df.replace({',': '.'}, regex=True)
-    # Pokus o převod na čísla — veškeré chyby ignorujeme
+
+    # Attempt numeric conversion; ignore errors
     for col in df.columns:
         try:
             df[col] = pd.to_numeric(df[col])
@@ -109,7 +107,7 @@ def validate_columns_presence(df: pd.DataFrame, required_cols: list[str])-> None
 
 def check_missing(df: pd.DataFrame):
     """
-    Ověří, že v df nejsou žádné NaN hodnoty.
+    Check for missing values and raise an error if any are found.
     """
     total_missing = int(df.isna().sum().sum())
     if total_missing:
@@ -134,17 +132,17 @@ def get_new_data(use_example: bool, new_file) -> pd.DataFrame:
     return df
 
 
-# === Validation for pipeline data ===
+# === Validation for Pipeline Data ===
 def validate_data(df: pd.DataFrame, required_cols: list) -> None:
     """
-    Ensure the DataFrame contains the required columns. Raise ValueError if not.
+    Ensure the DataFrame contains the required columns. Raise ValueError if missing.
     """
     missing = [col for col in required_cols if col not in df.columns]
     if missing:
         raise ValueError(f"Missing required columns: {missing}")
 
 
-# === Visualization utilities ===
+# === Visualization Utilities ===
 def create_pca_chart(pipeline, df_train: pd.DataFrame, df_new: pd.DataFrame, expected_cols: list):
     """
     Generate an Altair PCA projection chart for training vs. new samples.
@@ -193,34 +191,33 @@ def create_matplotlib_decision_plot(
     fig, ax = plt.subplots(figsize=(8,6))
     Z = model.decision_function(grid).reshape(xx.shape)
     ax.contour(xx, yy, Z, levels=[threshold], colors='k', linewidths=1)
-    ax.scatter(*X_train_pca.T, c=y_train_orig, cmap=mcolors.ListedColormap(["#eb9696","#5ECEAC"]), marker='x', label='Train')
+    ax.scatter(*X_train_pca.T, c=y_train_orig, cmap=mcolors.ListedColormap(["#eb9696","#5ECEAC"]), marker='x', label='Training')
     ax.scatter(*X_unknown_pca.T, c=y_unk_orig, cmap=mcolors.ListedColormap(["#eb9696","#5ECEAC"]),
-               edgecolors='k', label='For testing')
-    ax.set_xlabel('PC1'); ax.set_ylabel('PC2')
-    ax.set_title(f'SVM decision boundary at FNR {fnr}% (threshold={threshold:.3f})')
-    ax.legend(); ax.grid(True)
+               edgecolors='k', label='Predictions')
+    ax.set_xlabel('PC 1'); ax.set_ylabel('PC 2')
+    ax.set_title(f'SVM Decision Boundary for FNR {fnr}%')
+    ax.legend(loc='upper left'); ax.grid(True)
 
     ax.set_facecolor('white')
     fig.patch.set_facecolor('white')
     return fig
 
-
 # === FNR mapping and styling ===
 FNR_TO_THRESHOLD = {
-    0: -0.760,
-    1: -0.780,
-    2: -0.800,
-    3: -0.820,
-    4: -0.840,
-    5: -0.860,
-    6: -0.880,
-    7: -0.901,
-    8: -0.921,
-    9: -0.941,
+    0: -0.605,
+    1: -0.619,
+    2: -0.632,
+    3: -0.646,
+    4: -0.660,
+    5: -0.673,
+    6: -0.687,
+    7: -0.700,
+    8: -0.714,
+    9: -0.727,
 }
 
 def highlight_pred(val):
-    """Vrátí CSS styl podle hodnoty predikce."""
+    """Return CSS style string based on the prediction value."""
     if val == 'Sample quality is OK.':
         return 'background-color: white'
     else:

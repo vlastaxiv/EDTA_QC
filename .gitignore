@@ -1,0 +1,18 @@
+# Python byte-compiled files
+**/__pycache__/
+*.py[cod]
+
+# VSCode settings
+.vscode/
+
+
+# Streamlit cache and logs
+.streamlit/
+*.log
+
+# Ignored local Conda env folder (pokud jej máš v projektu)
+env/
+
+additionals/
+
+/notebooks/outputs_from_notebooks/
