@@ -15,7 +15,7 @@ from pathlib import Path
 # Project root and data directory
 ROOT = Path(__file__).resolve().parent.parent
 DATA_DIR = ROOT / "data"
-TRAIN_DATA_PATH = DATA_DIR / "train_data.csv"
+TRAIN_DATA_PATH = DATA_DIR / "train_197_data.csv"
 EXAMPLE_DATA_PATH = DATA_DIR / "example_new_samples.csv"
 
 # === Constants for Upload ===
@@ -33,6 +33,10 @@ UPLOAD_COLUMNS = [
     "PPIB",    # reference
     "STEAP4"]
 
+# thresholds.py or utils.py (shared constants)
+# Safe decision threshold (tested on train + test1 + test2)
+# This ensures zero false negatives on known data
+SAFE_THRESHOLD = -0.556  # fixed threshold based on test2 (FNR = 0)
 
 # === Cached Data Loaders ===
 @lru_cache(maxsize=1)

@@ -16,3 +16,5 @@ env/
 additionals/
 
 /notebooks/outputs_from_notebooks/
+
+/models/versions/

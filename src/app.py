@@ -16,7 +16,8 @@ from utils import (
     FNR_TO_THRESHOLD,
     highlight_pred,
     get_fnr_explanation,
-    UPLOAD_COLUMNS
+    UPLOAD_COLUMNS, 
+    SAFE_THRESHOLD
 )
 
 
@@ -35,9 +36,9 @@ ROOT = Path(__file__).resolve().parent.parent
 DATA_DIR   = ROOT / "data"
 MODELS_DIR = ROOT / "models"
 
-TRAIN_DATA_PATH   = DATA_DIR / "train_data.csv"
-EXAMPLE_DATA_PATH = DATA_DIR / "example_new_samples.csv"  # nebo jak se soubor jmenuje
-PIPELINE_PATH     = MODELS_DIR / "final_pipeline_prob.joblib"
+TRAIN_DATA_PATH   = DATA_DIR / "train_197_data.csv"
+EXAMPLE_DATA_PATH = DATA_DIR / "example_new_samples.csv"  
+PIPELINE_PATH     = MODELS_DIR / "final_pipeline_prob_v3_2025-09-05.joblib"
 # ── End of paths ──
 
 # Global CSS adjustments
