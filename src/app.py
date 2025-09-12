@@ -118,12 +118,12 @@ with st.sidebar.expander("ℹ️ SVM parameters and performance"):
         "- Kernel: Polynomial\n"
         "- Polynomial degree: 2\n"
         "- Regularization parameter (C): 0.1\n"
-        "- Coef0: 1\n"
-        "- Gamma: Scale\n"
-        "- Total support vectors (SV): 25\n"
-        "- Training samples: 220\n"
+        "- Coef0: 0.5\n"
+        "- Gamma: 0.1\n"
+        "- Total support vectors (SV): 40\n"
+        "- Training samples: 197\n"
         "- Test samples: 23\n"
-        "- SV (% of training data): 11.4%\n"
+        "- SV (% of training data): 20%\n"
         "- Cross-validation AUC (5-fold): 1.0 ± 0"
     )
   
@@ -169,7 +169,7 @@ st.altair_chart(chart, use_container_width=True)
 
 # Display current decision threshold
 st.markdown(
-    f"**Current decision threshold:** {threshold:.3f} (FNR = {fnr}%). Samples with decision score > decision threshold are classified as OK."
+    f"**Current decision threshold:** {threshold:.2f} (FNR = {fnr}%). Samples with decision score > decision threshold are classified as OK."
 )
 
 # Prediction step
@@ -181,9 +181,15 @@ if st.button("Run Prediction"):
     X_input_df = pd.DataFrame(df_new[expected_cols], columns=expected_cols)
     decision_scores = pipeline.decision_function(X_input_df)
  
-    # “Thresholded” predictions (use your chosen threshold to control FNR)
-    preds = (decision_scores > threshold).astype(int)
-    
+    # Round decision scores to 2 decimal places
+    rounded_scores = np.round(decision_scores, 2)
+   
+    # Apply threshold: class 1 if score > threshold, otherwise class 0
+    preds = (rounded_scores > threshold).astype(int)
+
+    # Explicit override: if score == threshold, assign class 0
+    preds = np.where(rounded_scores == threshold, 0, preds)
+
     # generate prediction labels based on thresholded decision scores
     pred_labels = [
         "Sample quality is OK." if p == 1 else
@@ -205,13 +211,9 @@ if st.button("Run Prediction"):
     df_result = pd.DataFrame({
         'sample': range(1, len(preds) + 1),
         first_col: df_new[first_col].values,
-        'decision_score': np.round(decision_scores, 1),
+        'decision_score': [f"{score:.2f}".rstrip('0').rstrip('.') for score in rounded_scores],
         'prediction': pred_labels
     })
-
-    # Remove trailing zeros from decision score
-    df_result['decision_score'] = df_result['decision_score'] \
-        .apply(lambda x: f"{x:.1f}".rstrip('0').rstrip('.'))
 
     # Style the results table
     def highlight_pred(val):
@@ -243,6 +245,7 @@ if st.button("Run Prediction"):
     st.download_button(
         "Download Results (.xlsx)",
         data=excel_buffer,
-        file_name="predictions.xlsx",
+        file_name = f"Predictions_FNR_{fnr}.xlsx",
         mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
     )
+

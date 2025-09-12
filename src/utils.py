@@ -36,7 +36,7 @@ UPLOAD_COLUMNS = [
 # thresholds.py or utils.py (shared constants)
 # Safe decision threshold (tested on train + test1 + test2)
 # This ensures zero false negatives on known data
-SAFE_THRESHOLD = -0.556  # fixed threshold based on test2 (FNR = 0)
+SAFE_THRESHOLD = -0.56  # fixed threshold based on test2 (FNR = 0)
 
 # === Cached Data Loaders ===
 @lru_cache(maxsize=1)
@@ -172,6 +172,7 @@ def create_matplotlib_decision_plot(
 ) -> plt.Figure:
     """
     Generate a matplotlib figure showing decision boundary at given threshold.
+    Uses the same rounding and threshold logic as in app.py (== threshold -> 0).
     """
     scaler = pipeline.named_steps['scaler']
     pca = pipeline.named_steps['pca']
@@ -181,43 +182,64 @@ def create_matplotlib_decision_plot(
     X_train_pca = pca.transform(scaler.transform(df_train[expected_cols]))[:, :2]
     X_unknown_pca = pca.transform(scaler.transform(df_new[expected_cols]))[:, :2]
 
-    # Decision scores for train & unknown
-    y_train_orig = (model.decision_function(pca.transform(scaler.transform(df_train[expected_cols]))) > threshold).astype(int)
-    y_unk_orig = (model.decision_function(pca.transform(scaler.transform(df_new[expected_cols]))) > threshold).astype(int)
+    # Decision scores (train + new)
+    train_scores = model.decision_function(pca.transform(scaler.transform(df_train[expected_cols])))
+    unk_scores   = model.decision_function(pca.transform(scaler.transform(df_new[expected_cols])))
+
+    # Round to 2 decimals (same as app.py)
+    rounded_train_scores = np.round(train_scores, 2)
+    rounded_unk_scores   = np.round(unk_scores, 2)
+
+    # Apply threshold: > threshold -> 1, == threshold -> 0
+    y_train_orig = (rounded_train_scores > threshold).astype(int)
+    y_train_orig = np.where(rounded_train_scores == threshold, 0, y_train_orig)
+
+    y_unk_orig = (rounded_unk_scores > threshold).astype(int)
+    y_unk_orig = np.where(rounded_unk_scores == threshold, 0, y_unk_orig)
 
     # Grid for boundary
-    x_min, x_max = X_train_pca[:,0].min()-1, X_train_pca[:,0].max()+1
-    y_min, y_max = X_train_pca[:,1].min()-1, X_train_pca[:,1].max()+1
-    xx, yy = np.meshgrid(np.linspace(x_min,x_max,200), np.linspace(y_min,y_max,200))
+    x_min, x_max = X_train_pca[:, 0].min() - 1, X_train_pca[:, 0].max() + 1
+    y_min, y_max = X_train_pca[:, 1].min() - 1, X_train_pca[:, 1].max() + 1
+    xx, yy = np.meshgrid(np.linspace(x_min, x_max, 200),
+                         np.linspace(y_min, y_max, 200))
     grid = np.c_[xx.ravel(), yy.ravel()]
 
     # Plot
-    fig, ax = plt.subplots(figsize=(8,6))
+    fig, ax = plt.subplots(figsize=(8, 6))
     Z = model.decision_function(grid).reshape(xx.shape)
     ax.contour(xx, yy, Z, levels=[threshold], colors='k', linewidths=1)
-    ax.scatter(*X_train_pca.T, c=y_train_orig, cmap=mcolors.ListedColormap(["#eb9696","#5ECEAC"]), marker='x', label='Training')
-    ax.scatter(*X_unknown_pca.T, c=y_unk_orig, cmap=mcolors.ListedColormap(["#eb9696","#5ECEAC"]),
+
+    # Training and new samples
+    ax.scatter(*X_train_pca.T, c=y_train_orig,
+               cmap=mcolors.ListedColormap(["#eb9696", "#5ECEAC"]),
+               marker='x', label='Training')
+    ax.scatter(*X_unknown_pca.T, c=y_unk_orig,
+               cmap=mcolors.ListedColormap(["#eb9696", "#5ECEAC"]),
                edgecolors='k', label='Predictions')
-    ax.set_xlabel('PC 1'); ax.set_ylabel('PC 2')
+
+    ax.set_xlabel('PC 1')
+    ax.set_ylabel('PC 2')
     ax.set_title(f'SVM Decision Boundary for FNR {fnr}%')
-    ax.legend(loc='upper left'); ax.grid(True)
+    ax.legend(loc='upper left')
+    ax.grid(True)
 
     ax.set_facecolor('white')
     fig.patch.set_facecolor('white')
     return fig
 
+
 # === FNR mapping and styling ===
 FNR_TO_THRESHOLD = {
-    0: -0.556,
-    1: -0.567,
-    2: -0.578,
-    3: -0.589,
-    4: -0.600,
-    5: -0.611,
-    6: -0.622,
-    7: -0.633,
-    8: -0.644,
-    9: -0.655,
+    0: -0.56,
+    1: -0.57,
+    2: -0.58,
+    3: -0.59,
+    4: -0.60,
+    5: -0.61,
+    6: -0.62,
+    7: -0.63,
+    8: -0.64,
+    9: -0.66,
 }
 
 def highlight_pred(val):
@@ -234,7 +256,7 @@ def get_fnr_explanation() -> list[str]:
     """
     return [ 
         "**Increasing FNR**, "
-        "shifts the decision threshold toward the OK class, permitting a limited fraction of samples with borderline‐altered gene expression to be classified as good quality samples.  "
+        "shifts the decision threshold toward the OK class, permitting a limited fraction of samples with borderline-altered gene expression to be classified as good quality samples.  "
         "Because our altered-expression criteria are very stringent, these marginal cases pose minimal risk.",
 
         "**FNR = 0 %**  The strictest setting. "
