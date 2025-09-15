@@ -177,7 +177,7 @@ Korenková V. EDTA Blood RNA QC – Streamlit app for EDTA blood RNA quality con
 
 For questions or support, please contact: `ctrnacta@yahoo.com`.  
 
-_Last updated: 2025-06-17_
+_Last updated: 2025-09-15_
 
 ----
 
@@ -198,7 +198,7 @@ The model development pipeline included two main stages:
 - Support Vector Machine (SVM) with polynomial kernel (`degree=2`) was used.
 - Hyperparameters (`C`, `coef0`) were optimized using `GridSearchCV` and cross-validation.
 - The optimized model, together with scaler and PCA transformation, was combined into a single pipeline.
-- The complete pipeline was saved as `final_pipeline_prob.joblib` for deployment in the Streamlit app.
+- The complete pipeline was saved as `final_pipeline_prob_v3_2025-09-05.joblib` for deployment in the Streamlit app.
 
 ### 2️⃣ Decision threshold evaluation 
 
@@ -211,8 +211,8 @@ The model development pipeline included two main stages:
 
 | Notebook | Description |
 |----------|-------------|
-| `SVM_model_training_final.ipynb` | Model training, hyperparameter optimization with GridSearchCV, and pipeline export |
-| `SVM_model_optimalization.ipynb` | Evaluation of decision thresholds (FNR) using the trained model |
+| `SVM_model_training_testing_10092025.jpynb` | Model training, hyperparameter optimization with GridSearchCV, and pipeline export |
+| `SVM_model_decision_boundary_10092025.ipynb` | Evaluation of decision thresholds (FNR) using the trained model |
 
 > These notebooks reproduce the full model development pipeline and can be adapted for retraining on new datasets.
 
@@ -222,7 +222,7 @@ The model development pipeline included two main stages:
 
 The trained model pipeline is stored in the models/ directory:
 
-   - final_pipeline_prob.joblib — complete pipeline containing StandardScaler, PCA transformation, and trained SVM classifier.
+   - final_pipeline_prob_v3_2025-09-05.joblib — complete pipeline containing StandardScaler, PCA transformation, and trained SVM classifier.
 
 This file is automatically loaded by the Streamlit app to perform predictions on new data.
 
