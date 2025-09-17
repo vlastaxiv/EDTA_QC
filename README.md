@@ -9,7 +9,9 @@ Features include interactive PCA plots, adjustable False Negative Rate (FNR) thr
 
 ## 📋 Table of Contents
 
-**A. Application usage**
+**A. Licence**
+
+**B. Application usage**
 
 1. Clone the Repository  
 2. Installation  
@@ -21,14 +23,25 @@ Features include interactive PCA plots, adjustable False Negative Rate (FNR) thr
 8. Citation  
 9. Contact
 
-**B. Model Development**
+**C. Model Development**
 
 10. Model Development & Jupyter Notebooks  
 11. Model files
 
 ----
 
-# A. Application usage
+# A. Licence
+
+⚠️ **Important notice** 
+
+Copyright (c) 2025 Vlasta Korenková.  
+All rights reserved.  
+
+This code is provided for review purposes only.  
+It may not be copied, modified, or used in any form until the associated manuscript is published.  
+Upon publication, a permissive license will be attached.  
+
+# B. Application usage
 
 ## 🔽 Clone the Repository
 
@@ -181,7 +194,7 @@ _Last updated: 2025-09-15_
 
 ----
 
-# B. Model Development
+# C. Model Development
 
 
 ## 🔬 Model Development in Jupyter Notebooks
