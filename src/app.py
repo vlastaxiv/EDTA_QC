@@ -81,7 +81,7 @@ except Exception:
     expected_cols = list(pipeline.named_steps['model'].feature_names_in_)
 
 # Sidebar: upload & settings
-st.sidebar.header("Upload New Samples for QC")
+st.sidebar.header("Upload New Samples for EDTA QC")
 with st.sidebar.expander("ℹ️ Detailed upload instructions"):
     st.caption(
         "- Upload either an Excel (*.xlsx) or CSV file\n"
@@ -214,6 +214,9 @@ if st.button("Run Prediction"):
         'decision_score': [f"{score:.2f}".rstrip('0').rstrip('.') for score in rounded_scores],
         'prediction': pred_labels
     })
+
+    # Reset index to start from 1 (for display consistency)
+    df_result.index = range(1, len(df_result) + 1)
 
     # Style the results table
     def highlight_pred(val):
